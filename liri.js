@@ -3,6 +3,8 @@ var keys = require("./keys.js");
 var Spotify = require("node-spotify-api")
 var spotify = new Spotify(keys.spotify);
 var axios = require("axios")
+var moment = require("moment")
+var fs = require("fs")
 // var myArr=["phil","eric","joe"]
 
 // myArr[0] //"phil"
@@ -27,11 +29,32 @@ function commandName() {
         case "movie-this":
             movieSearch()
             break
-            case"concert-this":
+        case "concert-this":
             concertSearch()
             break
+            case "do-what-it-says":
+                doWhatItSays()
+                break
     }
 }
+
+function doWhatItSays(){
+    
+    fs.readFile("./random.txt","utf8",function(error,data){
+        if(error){
+            console.log(error)
+        }
+       
+        console.log(data)
+        var inputFileArray=data.split(",")
+        console.log(inputFileArray[0])
+        console.log(inputFileArray[1])
+        command=inputFileArray[0].trim()
+       searchTerm=inputFileArray[1].trim()
+       commandName()
+    })
+}
+
 // * Title of the movie.
 //   * Year the movie came out.
 //   * IMDB Rating of the movie.
@@ -44,11 +67,14 @@ function movieSearch() {
     axios.get("http://www.omdbapi.com/?t=" + searchTerm + "&y=&plot=short&apikey=trilogy")
         .then(function (response) {
             console.log(response.data)
-            console.log("Title:",response.data.Title)
-            console.log("movieYear:",response.data.Year)
-            console.log("imdbRating",response.data.imdbRating)
-            console.log("rottenTomatoes",response.data.Ratings[1].Value)
-
+            console.log("Title:", response.data.Title)
+            console.log("movieYear:", response.data.Year)
+            console.log("imdbRating:", response.data.imdbRating)
+            console.log("rottenTomatoes:", response.data.Ratings[1].Value)
+            console.log("counrtyOrigin:", response.data.Country)
+            console.log("movieLanguage:", response.data.Language)
+            console.log("moviePlot:", response.data.Plot)
+            console.log("movieActors", response.data.Actors)
         })
 }
 // Name of the venue
@@ -56,12 +82,18 @@ function movieSearch() {
 // Venue location
 
 // Date of the Event (use moment to format this as "MM/DD/YYYY")
-function concertSearch(){
-    axios.get("https://rest.bandsintown.com/artists/"+searchTerm+"/events?app_id=codingbootcamp")
-  .then(function(response){
-      console.log(response.data)
-      console.log(response.data[0].venue.name)
-  })  
+function concertSearch() {
+    axios.get("https://rest.bandsintown.com/artists/" + searchTerm + "/events?app_id=codingbootcamp")
+        .then(function (response) {
+            console.log(response.data)
+            for (let i = 0; i < response.data.length; i++) {
+                console.log("venue name:", response.data[i].venue.name)
+                console.log("location of concert:", response.data[i].venue.city, response.data[i].venue.country)
+                console.log("venue event date:", moment(response.data[i].datetime, "YYYY-MM-DD").format("MM/DD/YYYY"))
+                console.log(" __________________________________________________")
+            }
+
+        })
 }
 
 function searchSpotify() {
@@ -75,7 +107,7 @@ function searchSpotify() {
             console.log("song name:", data.tracks.items[i].name)
             console.log("preview URL", data.tracks.items[i].preview_url)
             console.log("album", data.tracks.items[i].album.name)
-            console.log("__________________________________________________")
+            console.log(" __________________________________________________")
         }
 
 
